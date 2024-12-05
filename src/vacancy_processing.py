@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 
 import requests
+import json
 
 
 class VacancyAPI(ABC):
@@ -17,22 +18,58 @@ class VacancyAPI(ABC):
     def _get_vacancies(self):
         pass
 
+search_vacancy_url='https://api.hh.ru/vacancies?employer_id=869045'
+
+search_employers_url='https://api.hh.ru/employers'
+
+search_areas='https://api.hh.ru/areas'
+
+cbs_commodities_management = "1162986"
+
+encore = "5344909"
+
+gts = "2029899"
+
+happy_delivery = "11071056"
+
+happy_phone = "3786114"
+
+koblik_group = "40951"
+
+ozon = "10690081"
+
+retail_personal = "1420859"
+
+rubin_aero_corp = "1035262"
+
+abc_electro = "129348"
+
+agat_utility =  "168386"
+
+al_5 = "57302"
+
+gijov_galary = "25331"
+
+bel_gran = "602244"
+
+benuk_se = "10911906"
 
 
 
-class HeadHunterAPI(VacancyAPI):
 
 
-    def __init__(self, vacancy):
-        self.__url = 'https://api.hh.ru/vacancies?employer_id=869045'
+class HeadHunterAPI:
+
+
+    def __init__(self, employer):
+
+        self.__employer = employer
+        self.__url = f'https://api.hh.ru/vacancies?employer_id={self.__employer}'
         self.__headers = {'User-Agent':'HH-User-Agent'}
-        self.__params = {'text': '', 'page': 0, 'per_page': 100}
+        self.__params = {'text': '','only_with_vacancies': True, 'page': 0, 'per_page': 100}
         self.__vacancies = []
-        self.__vacancy = vacancy
-        super().__init__(vacancy)
 
-    def _api_request(self):
-        super()._api_request()
+    def __api_request(self):
         try:
             response = requests.get(self.__url, headers=self.__headers, params=self.__params)
 
@@ -45,50 +82,15 @@ class HeadHunterAPI(VacancyAPI):
     @property
     def _get_vacancies(self):
         '''Модуль для получения вакансий с HeadHunter.ru'''
-        super()._get_vacancies()
-        self.__params['text'] = self.__vacancy
-        try:
-            while self.__params.get('page') != 20:
-
-                vacancies = self._api_request()['items']
-                self.__vacancies.extend(vacancies)
-                self.__params['page'] +=1
-
-            return self.__vacancies
-        except Exception as e:
-            print(f'Ошибка {e} в методе vacancies_request')
+        employer_vacancy = self.__api_request()['items']
+        return employer_vacancy
 
     @property
     def vacancy_list(self):
         '''Модуль для формирования списка вакансий с Названием Вакансии, Минимальной зарплатой, Описанием требований
         к соискателю, Ссылкой на вакансию на HH.ru и графиком работы'''
         try:
-            raw_list = self._get_vacancies #получаем список вакансий с ХХ.ру
-            vac_list = [] #список для накопления кавансий
-            for i in range(len(raw_list)): #в этом цикле перебераем элементы
-                for key, value in raw_list[i].items(): #в этом цикле перебераем словарь
-                        # для получения определенных критериев для вакансии
-                    if key in ['name', 'salary', 'snippet', 'url', 'schedule']:
-                        vac_list.append(value)
-            result_list = [] #список для накопления итоговых значений
-            for vac in vac_list:
-                if type(vac) is dict: #если элемент списка словарь, получаем начальный уровень зарплаты и обязаностей
-                    for key, value in vac.items():
-                        if key == 'from': #получем минимальный размер зарплаты
-                            result_list.append(value)
-                        elif key == 'requirement': #получаем требования к специальности
-                            result_list.append(value)
-                        elif key == 'name': #получаем режим работы
-                            result_list.append(value)
-                        else:
-                            continue
-                else:
-                    result_list.append(vac)
-            output_list = []
-            for i in range(0,len(result_list), 5): #цикл для формирования списка вакансий
-                output_list.append(result_list[i:i+5])
-
-            return output_list
+           pass
         except TypeError as e:
             print(f'Ошибка {e} в модуле vacancy_list')
 
@@ -97,5 +99,10 @@ class HeadHunterAPI(VacancyAPI):
 
 
 if __name__ == '__main__':
-    vacancy = HeadHunterAPI('')
-    print(vacancy._get_vacancies)
+    vacancy = HeadHunterAPI(rubin_aero_corp)
+    data = vacancy._get_vacancies
+
+
+    with open('dump.json', "w", encoding='utf-8') as file:
+        json.dump(data, file, ensure_ascii=False, indent=1)
+
