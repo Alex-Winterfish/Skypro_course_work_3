@@ -58,7 +58,7 @@ benuk_se = "10911906"
 
 
 
-class HeadHunterAPI:
+class HeadHunterVacancy:
 
 
     def __init__(self, employer):
@@ -90,7 +90,30 @@ class HeadHunterAPI:
         '''Модуль для формирования списка вакансий с Названием Вакансии, Минимальной зарплатой, Описанием требований
         к соискателю, Ссылкой на вакансию на HH.ru и графиком работы'''
         try:
-           pass
+
+            output_dict=dict() #словарь для накопления вакансий
+            i = 1
+            data = self._get_vacancies
+            for vac in data:
+
+                vac_data=list() #список для данный одной вакансии
+                vac_data.append(vac.get('name'))
+                vac_data.append(vac.get('address', 0).get('city'))
+                vac_data.append(vac.get('address', 0).get('raw'))
+                vac_data.append(vac.get('alternate_url'))
+                vac_data.append(vac.get('snippet').get('requirement'))
+                vac_data.append(vac.get('snippet').get('responsibility'))
+                vac_data.append(vac.get('schedule').get('name'))
+                vac_data.append(vac.get('salary'))
+
+                output_dict[i] = vac_data
+
+                i+=1
+
+            return output_dict
+
+
+
         except TypeError as e:
             print(f'Ошибка {e} в модуле vacancy_list')
 
@@ -99,8 +122,8 @@ class HeadHunterAPI:
 
 
 if __name__ == '__main__':
-    vacancy = HeadHunterAPI(rubin_aero_corp)
-    data = vacancy._get_vacancies
+    vacancy = HeadHunterVacancy(encore)
+    data = vacancy.vacancy_list
 
 
     with open('dump.json', "w", encoding='utf-8') as file:
