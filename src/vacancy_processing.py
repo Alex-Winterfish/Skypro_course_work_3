@@ -1,28 +1,5 @@
-from abc import ABC, abstractmethod
-
 import requests
 import json
-
-
-class VacancyAPI(ABC):
-
-    @abstractmethod
-    def __init__(self, vacancy):
-        self.__vacancy = vacancy
-
-    @abstractmethod
-    def _api_request(self):
-        pass
-
-    @abstractmethod
-    def _get_vacancies(self):
-        pass
-
-search_vacancy_url='https://api.hh.ru/vacancies?employer_id=869045'
-
-search_employers_url='https://api.hh.ru/employers'
-
-search_areas='https://api.hh.ru/areas'
 
 cbs_commodities_management = "1162986"
 
@@ -54,24 +31,54 @@ bel_gran = "602244"
 
 benuk_se = "10911906"
 
+employer_list = [cbs_commodities_management,
 
+encore,
 
+gts,
 
+happy_delivery,
+
+happy_phone,
+
+koblik_group,
+
+ozon,
+
+retail_personal,
+
+rubin_aero_corp,
+
+abc_electro,
+
+agat_utility,
+
+al_5,
+
+gijov_galary,
+
+bel_gran,
+
+benuk_se]
 
 class HeadHunterVacancy:
-
 
     def __init__(self, employer):
 
         self.__employer = employer
-        self.__url = f'https://api.hh.ru/vacancies?employer_id={self.__employer}'
+        self.__vacancies_url = f'https://api.hh.ru/vacancies?employer_id={self.__employer}'
+        self.__employer_url = f'https://api.hh.ru/employers/{self.__employer}'
         self.__headers = {'User-Agent':'HH-User-Agent'}
-        self.__params = {'text': '','only_with_vacancies': True, 'page': 0, 'per_page': 100}
+        self.__params = {'page': 0, 'per_page': 100}
         self.__vacancies = []
 
-    def __api_request(self):
+    def __api_request(self, req_vac=True):
         try:
-            response = requests.get(self.__url, headers=self.__headers, params=self.__params)
+            if req_vac:
+                response = requests.get(self.__vacancies_url, headers=self.__headers, params=self.__params)
+
+            else:
+                response = requests.get(self.__employer_url, headers=self.__headers, params=self.__params)
 
             if response.status_code == 200:
                 api_data = response.json()
@@ -79,11 +86,14 @@ class HeadHunterVacancy:
         except Exception as e:
             print(f'Ошибка {e} в модуле api_request {requests.status_code}')
 
-    @property
     def _get_vacancies(self):
         '''Модуль для получения вакансий с HeadHunter.ru'''
         employer_vacancy = self.__api_request()['items']
         return employer_vacancy
+
+    def _get_employer(self):
+        employer = self.__api_request(req_vac=False)
+        return employer
 
     @property
     def vacancy_list(self):
@@ -91,41 +101,65 @@ class HeadHunterVacancy:
         к соискателю, Ссылкой на вакансию на HH.ru и графиком работы'''
         try:
 
-            output_dict=dict() #словарь для накопления вакансий
-            i = 1
-            data = self._get_vacancies
+            output_list=list() #словарь для накопления вакансий
+
+            data = self._get_vacancies()
             for vac in data:
 
                 vac_data=list() #список для данный одной вакансии
                 vac_data.append(vac.get('name'))
-                vac_data.append(vac.get('address', 0).get('city'))
-                vac_data.append(vac.get('address', 0).get('raw'))
+                if vac.get('address', 0) is not None:
+                    vac_data.append(vac.get('address', 0).get('city'))
+                    vac_data.append(vac.get('address', 0).get('raw'))
+                else:
+                    vac_data.append(None)
+                    vac_data.append(None)
+
                 vac_data.append(vac.get('alternate_url'))
                 vac_data.append(vac.get('snippet').get('requirement'))
                 vac_data.append(vac.get('snippet').get('responsibility'))
                 vac_data.append(vac.get('schedule').get('name'))
-                vac_data.append(vac.get('salary'))
+                if vac.get('salary') is not None:
+                    vac_data.append(vac.get('salary').get('from'))
+                else:
+                    vac_data.append(0)
 
-                output_dict[i] = vac_data
-
-                i+=1
-
-            return output_dict
+                output_list.append(vac_data)
 
 
+
+            return output_list
 
         except TypeError as e:
             print(f'Ошибка {e} в модуле vacancy_list')
+
+    @property
+    def employer_info(self):
+        try:
+            output_list=list()
+
+            emp_data = self._get_employer()
+
+            output_list.append(emp_data.get('name'))
+            output_list.append(emp_data.get('description'))
+            output_list.append(emp_data.get('site_url'))
+            output_list.append(emp_data.get('area').get('name'))
+
+            return output_list
+        except TypeError as e:
+            print(f'Ошибка {e} в модуле employer_info')
+
+
 
 
 
 
 
 if __name__ == '__main__':
-    vacancy = HeadHunterVacancy(encore)
+    vacancy = HeadHunterVacancy(happy_phone)
     data = vacancy.vacancy_list
 
+    print(data[0])
 
-    with open('dump.json', "w", encoding='utf-8') as file:
-        json.dump(data, file, ensure_ascii=False, indent=1)
+
 
