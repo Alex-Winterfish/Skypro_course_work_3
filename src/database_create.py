@@ -1,6 +1,6 @@
 import psycopg2
-from src.vacancy_processing import HeadHunterVacancy
-from src.vacancy_processing import employer_list
+from src.vacancy_processing import HeadHunterVacancy, employer_list
+
 connection = {
     'host':'localhost',
     'database':'vacancies',
@@ -88,6 +88,8 @@ if __name__ == '__main__':
 
     create_tables()
 
-    data = HeadHunterVacancy(employer_list[0])
+    for company in employer_list:
 
-    table_insert_value(data)
+        data = HeadHunterVacancy(company)
+
+        table_insert_value(data)

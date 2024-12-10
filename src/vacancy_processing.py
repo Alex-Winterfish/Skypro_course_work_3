@@ -120,7 +120,10 @@ class HeadHunterVacancy:
                 vac_data.append(vac.get('snippet').get('responsibility'))
                 vac_data.append(vac.get('schedule').get('name'))
                 if vac.get('salary') is not None:
-                    vac_data.append(vac.get('salary').get('from'))
+                    if vac.get('salary').get('from') is not None:
+                        vac_data.append(vac.get('salary').get('from'))
+                    else:
+                        vac_data.append(0)
                 else:
                     vac_data.append(0)
 
