@@ -85,11 +85,54 @@ class DBManager:
 
         return data
 
+    def get_vacancies_whit_keyword(self, key_word:str):
+
+        key_word = key_word.lower()
+        key_word_cap = key_word.capitalize()
+        output_data = list()
+
+        with psycopg2.connect(**self.__connection) as conn:
+            with conn.cursor() as cur:
+                cur.execute("SELECT vacancy_name, "
+                            "address, "
+                            "vacancy_url, "
+                            "requirement, "
+                            "responsibilities, "
+                            "schedule, "
+                            "salary "
+                            "from vacancies "
+                            "WHERE vacancy_name "
+                            f"LIKE '%{key_word}%'")
+
+                data_1 = cur.fetchall()
+
+                if data:
+                    output_data += data_1
+
+                cur.execute("SELECT vacancy_name, "
+                            "address, "
+                            "vacancy_url, "
+                            "requirement, "
+                            "responsibilities, "
+                            "schedule, "
+                            "salary "
+                            "from vacancies "
+                            "WHERE vacancy_name "
+                            f"LIKE '%{key_word_cap}%'")
+
+                data_2 = cur.fetchall()
+
+                if data_2:
+                    output_data += data_2
+
+                conn.commit()
+
+        return output_data
 
 if __name__ == '__main__':
 
     data = DBManager(host,database,user,password)
 
-    list_vac = data.get_vacancies_with_higher_salary()
+    list_vac = data.get_vacancies_whit_keyword('иНжеНер')
 
     print(list_vac)
